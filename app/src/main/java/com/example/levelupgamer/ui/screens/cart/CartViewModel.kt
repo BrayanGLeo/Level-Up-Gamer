@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.levelupgamer.data.model.CartItem
 import com.example.levelupgamer.data.model.Order
+import com.example.levelupgamer.data.model.Product
 import com.example.levelupgamer.data.remote.ApiService
 import com.example.levelupgamer.data.repository.CartRepository
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -43,6 +44,12 @@ class CartViewModel(
             initialValue = 0
         )
 
+    fun addToCart(product: Product) {
+        viewModelScope.launch {
+            cartRepository.addToCart(product)
+        }
+    }
+
     fun updateQuantity(codigo: String, newQuantity: Int) {
         viewModelScope.launch {
             cartRepository.updateQuantity(codigo, newQuantity)
@@ -69,7 +76,6 @@ class CartViewModel(
                 val order = Order(items = items, total = total, customerEmail = userEmail)
 
                 val response = apiService.postSale(order)
-
                 if (response.success) {
                     cartRepository.clearCart()
                     _uiState.value = CartUiState(saleSuccess = true)

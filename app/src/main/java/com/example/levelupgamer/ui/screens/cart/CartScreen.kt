@@ -10,9 +10,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.*
-import androidx.compose.material3.SwipeToDismissBox
-import androidx.compose.material3.SwipeToDismissBoxValue
-import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -25,6 +22,9 @@ import androidx.compose.ui.unit.sp
 import com.example.levelupgamer.ui.screens.cart.components.CartItemCard
 import com.example.levelupgamer.ui.screens.products.components.toPrice
 import kotlinx.coroutines.launch
+import androidx.compose.material3.SwipeToDismissBox
+import androidx.compose.material3.SwipeToDismissBoxValue
+import androidx.compose.material3.rememberSwipeToDismissBoxState
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -83,10 +83,8 @@ fun CartScreen(
                     items(cartItems, key = { it.codigo }) { item ->
 
                         val dismissState = rememberSwipeToDismissBoxState(
-                            confirmValueChange = { targetValue ->
-                                if (targetValue == SwipeToDismissBoxValue.StartToEnd ||
-                                    targetValue == SwipeToDismissBoxValue.EndToStart) {
-
+                            confirmValueChange = { dismissValue ->
+                                if (dismissValue == SwipeToDismissBoxValue.StartToEnd || dismissValue == SwipeToDismissBoxValue.EndToStart) {
                                     viewModel.removeFromCart(item.codigo)
                                     coroutineScope.launch {
                                         snackbarHostState.showSnackbar("Producto eliminado")
@@ -94,8 +92,7 @@ fun CartScreen(
                                     return@rememberSwipeToDismissBoxState true
                                 }
                                 false
-                            },
-                            positionalThreshold = { it * .25f }
+                            }
                         )
 
                         SwipeToDismissBox(
@@ -136,6 +133,7 @@ fun CartScreen(
                                 }
                             )
                         }
+
                         HorizontalDivider()
                     }
                 }

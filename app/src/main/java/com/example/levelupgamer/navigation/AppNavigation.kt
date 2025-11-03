@@ -1,14 +1,11 @@
 package com.example.levelupgamer.navigation
 
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
+import android.widget.Toast
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -19,18 +16,22 @@ import androidx.navigation.compose.rememberNavController
 import com.example.levelupgamer.data.local.AppDatabase
 import com.example.levelupgamer.data.remote.RetrofitClient
 import com.example.levelupgamer.data.repository.AuthRepository
+import com.example.levelupgamer.data.repository.BlogRepository
 import com.example.levelupgamer.data.repository.CartRepository
 import com.example.levelupgamer.data.repository.ProductRepository
 import com.example.levelupgamer.ui.components.MainScaffold
+import com.example.levelupgamer.ui.screens.blog.BlogListScreen
+import com.example.levelupgamer.ui.screens.blog.BlogListViewModel
 import com.example.levelupgamer.ui.screens.cart.CartScreen
 import com.example.levelupgamer.ui.screens.cart.CartViewModel
+import com.example.levelupgamer.ui.screens.home.HomeScreen
+import com.example.levelupgamer.ui.screens.home.HomeViewModel
 import com.example.levelupgamer.ui.screens.login.LoginScreen
 import com.example.levelupgamer.ui.screens.login.LoginViewModel
 import com.example.levelupgamer.ui.screens.products.ProductListScreen
 import com.example.levelupgamer.ui.screens.products.ProductListViewModel
-import com.example.levelupgamer.ui.screens.home.HomeScreen
-import com.example.levelupgamer.ui.screens.home.HomeViewModel
-import org.koin.androidx.compose.koinViewModel
+import com.example.levelupgamer.ui.screens.register.RegisterScreen
+import com.example.levelupgamer.ui.screens.register.RegisterViewModel
 import kotlinx.coroutines.launch
 
 @Composable
@@ -47,9 +48,10 @@ fun AppNavigation() {
     val authRepository = remember { AuthRepository() }
     val productRepository = remember { ProductRepository(apiService) }
     val cartRepository = remember { CartRepository(cartDao) }
+    val blogRepository = remember { BlogRepository() }
 
     val navBackStackEntry by navController.currentBackStackEntryAsState()
-    val currentRoute = navBackStackEntry?.destination?.route ?: Screen.Login.route
+    val currentRoute = navBackStackEntry?.destination?.route ?: Screen.Home.route
 
     MainScaffold(
         navController = navController,
@@ -66,37 +68,70 @@ fun AppNavigation() {
                 LoginScreen(
                     viewModel = vm,
                     onLoginSuccess = {
-                        navController.navigate(Screen.ProductList.route) {
+                        navController.navigate(Screen.Home.route) {
                             popUpTo(Screen.Login.route) { inclusive = true }
                         }
+                    },
+                    onNavigateToRegister = {
+                        navController.navigate(Screen.Register.route)
+                    }
+                )
+            }
+
+            composable(Screen.Register.route) {
+                val vm: RegisterViewModel = viewModel { RegisterViewModel(authRepository) }
+                RegisterScreen(
+                    viewModel = vm,
+                    onRegisterSuccess = {
+                        scope.launch {
+                            Toast.makeText(context, "¡Registro exitoso! Inicia sesión.", Toast.LENGTH_LONG).show()
+                            navController.navigate(Screen.Login.route) {
+                                popUpTo(Screen.Register.route) { inclusive = true }
+                            }
+                        }
+                    },
+                    onNavigateToLogin = {
+                        navController.popBackStack()
                     }
                 )
             }
 
             composable(Screen.Home.route) {
-                val viewModel: HomeViewModel = koinViewModel()
+                val vm: HomeViewModel = viewModel {
+                    HomeViewModel(productRepository, blogRepository)
+                }
+                val cartVm: CartViewModel = viewModel {
+                    CartViewModel(cartRepository, apiService)
+                }
                 HomeScreen(
-                    viewModel = viewModel,
-                    onProductClick = {
+                    viewModel = vm,
+                    onProductClick = { product ->
+                        navController.navigate(Screen.ProductList.route)
+                    },
+                    onAddToCart = { product ->
+                        cartVm.addToCart(product)
+                        scope.launch {
+                            snackbarHostState.showSnackbar("Producto añadido al carro")
+                        }
+                    },
+                    onNavigateToBlog = {
+                        navController.navigate(Screen.Blog.route)
+                    }
+                )
+            }
+
+            composable(Screen.Blog.route) {
+                val vm: BlogListViewModel = viewModel {
+                    BlogListViewModel(blogRepository)
+                }
+                BlogListScreen(
+                    viewModel = vm,
+                    onBlogClick = { blogId ->
                     }
                 )
             }
 
             composable(Screen.ProductList.route) {
-                val vm: ProductListViewModel = viewModel {
-                    ProductListViewModel(productRepository, cartRepository)
-                }
-                ProductListScreen(
-                    viewModel = vm,
-                    onProductAdded = {
-                        scope.launch {
-                            snackbarHostState.showSnackbar("Producto añadido al carro")
-                        }
-                    }
-                )
-            }
-
-            composable(Screen.Home.route) {
                 val vm: ProductListViewModel = viewModel {
                     ProductListViewModel(productRepository, cartRepository)
                 }
@@ -117,22 +152,11 @@ fun AppNavigation() {
                 CartScreen(
                     viewModel = vm,
                     onCheckoutSuccess = {
-                        navController.navigate(Screen.ProductList.route) {
-                            popUpTo(Screen.ProductList.route) { inclusive = true }
+                        navController.navigate(Screen.Home.route) {
+                            popUpTo(Screen.Home.route) { inclusive = true }
                         }
                     }
                 )
-            }
-
-            composable(Screen.Profile.route) {
-                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text("Pantalla de Perfil (en construcción)")
-                }
-            }
-            composable(Screen.Orders.route) {
-                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text("Pantalla de Pedidos (en construcción)")
-                }
             }
         }
     }

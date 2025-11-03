@@ -24,7 +24,12 @@ fun MainScaffold(
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
 
-    if (currentRoute == Screen.Login.route) {
+    val noScaffoldRoutes = listOf(
+        Screen.Login.route,
+        Screen.Register.route
+    )
+
+    if (currentRoute in noScaffoldRoutes) {
         content(Modifier)
     } else {
         ModalNavigationDrawer(
@@ -34,9 +39,10 @@ fun MainScaffold(
                     currentRoute = currentRoute,
                     onNavigate = { route ->
                         navController.navigate(route) {
-                            popUpTo(navController.graph.startDestinationId)
+                            popUpTo(Screen.Home.route)
                             launchSingleTop = true
                         }
+                        scope.launch { drawerState.close() }
                     },
                     closeDrawer = { scope.launch { drawerState.close() } }
                 )
@@ -57,7 +63,6 @@ fun MainScaffold(
                             }
                         },
                         actions = {
-                            // Requisito: Acción en AppBar (Carro de compra)
                             IconButton(onClick = { navController.navigate(Screen.Cart.route) }) {
                                 Icon(Icons.Default.ShoppingCart, "Carro")
                             }

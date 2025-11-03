@@ -19,6 +19,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -32,10 +33,11 @@ fun Int.toPrice(): String {
 @Composable
 fun ProductCard(
     product: Product,
-    onAddToCart: (Product) -> Unit
+    onAddToCart: (Product) -> Unit,
+    modifier: Modifier = Modifier
 ) {
     Card(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .border(1.dp, MaterialTheme.colorScheme.primary, RoundedCornerShape(8.dp)),
         shape = RoundedCornerShape(8.dp),
@@ -51,16 +53,22 @@ fun ProductCard(
                     .fillMaxWidth()
                     .height(180.dp)
                     .clip(RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp)),
-                contentScale = ContentScale.Crop
+                contentScale = ContentScale.Fit
             )
 
-            Column(modifier = Modifier.padding(16.dp)) {
+            Column(
+                modifier = Modifier
+                    .padding(16.dp)
+                    .fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
                 Text(
                     text = product.nombre,
                     fontWeight = FontWeight.Bold,
                     fontSize = 18.sp,
                     maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
+                    overflow = TextOverflow.Ellipsis,
+                    textAlign = TextAlign.Center
                 )
                 Text(
                     text = product.descripcion,
@@ -68,7 +76,8 @@ fun ProductCard(
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.height(40.dp)
+                    modifier = Modifier.height(40.dp),
+                    textAlign = TextAlign.Center
                 )
                 Spacer(modifier = Modifier.height(16.dp))
                 Text(
@@ -78,9 +87,9 @@ fun ProductCard(
                     color = MaterialTheme.colorScheme.secondary
                 )
                 Spacer(modifier = Modifier.height(16.dp))
+
                 Button(
                     onClick = { onAddToCart(product) },
-                    modifier = Modifier.align(Alignment.End)
                 ) {
                     Text("Agregar al Carro")
                 }

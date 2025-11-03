@@ -1,4 +1,4 @@
-package com.example.levelupgamer.ui.screens.login
+package com.example.levelupgamer.ui.screens.register
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -11,27 +11,24 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.AnnotatedString
-import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextDecoration
-import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.levelupgamer.R
 
 @Composable
-fun LoginScreen(
-    viewModel: LoginViewModel,
-    onLoginSuccess: () -> Unit,
-    onNavigateToRegister: () -> Unit
+fun RegisterScreen(
+    viewModel: RegisterViewModel,
+    onRegisterSuccess: () -> Unit,
+    onNavigateToLogin: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
-    LaunchedEffect(uiState.loginSuccess) {
-        if (uiState.loginSuccess) {
-            onLoginSuccess()
+    LaunchedEffect(uiState.registerSuccess) {
+        if (uiState.registerSuccess) {
+            onRegisterSuccess()
         }
     }
 
@@ -57,15 +54,25 @@ fun LoginScreen(
             )
 
             Text(
-                text = "Iniciar Sesión",
+                text = "Crear Cuenta",
                 style = MaterialTheme.typography.headlineMedium,
                 color = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.padding(bottom = 24.dp)
             )
 
-            var email by remember { mutableStateOf("admin@admin.cl") }
-            var password by remember { mutableStateOf("admin") }
+            var name by remember { mutableStateOf("") }
+            var email by remember { mutableStateOf("") }
+            var password by remember { mutableStateOf("") }
+            var confirmPassword by remember { mutableStateOf("") }
 
+            OutlinedTextField(
+                value = name,
+                onValueChange = { name = it },
+                label = { Text("Nombre Completo") },
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true
+            )
+            Spacer(modifier = Modifier.height(16.dp))
             OutlinedTextField(
                 value = email,
                 onValueChange = { email = it },
@@ -73,9 +80,7 @@ fun LoginScreen(
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true
             )
-
             Spacer(modifier = Modifier.height(16.dp))
-
             OutlinedTextField(
                 value = password,
                 onValueChange = { password = it },
@@ -84,49 +89,38 @@ fun LoginScreen(
                 singleLine = true,
                 visualTransformation = PasswordVisualTransformation()
             )
-
+            Spacer(modifier = Modifier.height(16.dp))
+            OutlinedTextField(
+                value = confirmPassword,
+                onValueChange = { confirmPassword = it },
+                label = { Text("Confirmar Contraseña") },
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
+                visualTransformation = PasswordVisualTransformation()
+            )
             Spacer(modifier = Modifier.height(24.dp))
 
             if (uiState.isLoading) {
                 CircularProgressIndicator(modifier = Modifier.size(48.dp))
             } else {
                 Button(
-                    onClick = { viewModel.login(email, password) },
+                    onClick = { viewModel.register(email, name, password, confirmPassword) },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(50.dp)
                 ) {
-                    Text("Acceder", fontSize = 16.sp)
+                    Text("Registrarse", fontSize = 16.sp)
                 }
             }
 
             Spacer(modifier = Modifier.height(16.dp))
-
-            val annotatedText = buildAnnotatedString {
-                append("¿No tienes cuenta? ")
-                pushStringAnnotation(tag = "REGISTER", annotation = "register")
-                withStyle(
-                    style = SpanStyle(
-                        color = MaterialTheme.colorScheme.primary,
-                        textDecoration = TextDecoration.Underline
-                    )
-                ) {
-                    append("Regístrate aquí")
-                }
-                pop()
-            }
-
             ClickableText(
-                text = annotatedText,
+                text = AnnotatedString("¿Ya tienes cuenta? Inicia Sesión"),
                 style = TextStyle(
-                    color = MaterialTheme.colorScheme.onSurface // Color de texto normal
+                    color = MaterialTheme.colorScheme.primary,
+                    textDecoration = TextDecoration.Underline
                 ),
-                onClick = { offset ->
-                    annotatedText.getStringAnnotations(tag = "REGISTER", start = offset, end = offset)
-                        .firstOrNull()?.let {
-                            onNavigateToRegister()
-                        }
-                }
+                onClick = { onNavigateToLogin() }
             )
 
             uiState.error?.let {

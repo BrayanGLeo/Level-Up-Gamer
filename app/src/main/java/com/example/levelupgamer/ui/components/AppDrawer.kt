@@ -2,29 +2,27 @@ package com.example.levelupgamer.ui.components
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material.icons.filled.Article
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.example.levelupgamer.R
 import com.example.levelupgamer.navigation.Screen
 
-data class DrawerItem(
-    val route: String,
-    val title: String,
-    val icon: ImageVector
-)
-
 private val drawerItems = listOf(
-    DrawerItem(Screen.ProductList.route, "Inicio", Icons.Default.Home),
-    DrawerItem(Screen.Cart.route, "Carro", Icons.Default.ShoppingCart),
-    DrawerItem(Screen.Profile.route, "Perfil", Icons.Default.AccountCircle),
-    DrawerItem(Screen.Orders.route, "Mis Pedidos", Icons.AutoMirrored.Filled.List)
+    Screen.Home,
+    Screen.ProductList,
+    Screen.Blog,
+    Screen.Cart,
+    Screen.Login
 )
 
 @Composable
@@ -45,10 +43,14 @@ fun AppDrawer(
         }
         Divider()
         Spacer(Modifier.height(12.dp))
+
         drawerItems.forEach { item ->
+            val (titleRes, icon) = getScreenMetadata(item)
+            val title = stringResource(id = titleRes)
+
             NavigationDrawerItem(
-                icon = { Icon(item.icon, contentDescription = item.title) },
-                label = { Text(item.title) },
+                icon = { Icon(icon, contentDescription = title) },
+                label = { Text(title) },
                 selected = currentRoute == item.route,
                 onClick = {
                     onNavigate(item.route)
@@ -57,5 +59,17 @@ fun AppDrawer(
                 modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
             )
         }
+    }
+}
+
+@Composable
+private fun getScreenMetadata(screen: Screen): Pair<Int, ImageVector> {
+    return when (screen) {
+        Screen.Home -> Pair(R.string.screen_home, Icons.Default.Home)
+        Screen.ProductList -> Pair(R.string.screen_products, Icons.Default.List)
+        Screen.Blog -> Pair(R.string.screen_blog, Icons.Default.Article) // <-- AÑADIDO
+        Screen.Cart -> Pair(R.string.screen_cart, Icons.Default.ShoppingCart)
+        Screen.Login -> Pair(R.string.screen_login, Icons.Default.AccountCircle)
+        Screen.Register -> Pair(R.string.screen_login, Icons.Default.AccountCircle)
     }
 }
