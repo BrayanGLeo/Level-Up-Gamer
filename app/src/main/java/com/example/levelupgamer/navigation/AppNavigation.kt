@@ -84,9 +84,9 @@ fun AppNavigation() {
                 val uiState by vm.uiState.collectAsState()
 
                 LaunchedEffect(uiState.loginSuccessUser) {
-                    if (uiState.loginSuccessUser != null) {
-                        authManager.saveUser(uiState.loginSuccessUser)
-                        currentUser = uiState.loginSuccessUser
+                    uiState.loginSuccessUser?.let { user ->
+                        authManager.saveUser(user)
+                        currentUser = user
 
                         navController.navigate(Screen.Home.route) {
                             popUpTo(Screen.Login.route) { inclusive = true }
