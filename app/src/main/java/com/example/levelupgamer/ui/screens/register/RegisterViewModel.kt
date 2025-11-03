@@ -2,6 +2,7 @@ package com.example.levelupgamer.ui.screens.register
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.levelupgamer.data.model.User
 import com.example.levelupgamer.data.repository.AuthRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -9,7 +10,7 @@ import kotlinx.coroutines.launch
 
 data class RegisterUiState(
     val isLoading: Boolean = false,
-    val registerSuccess: Boolean = false,
+    val registerSuccessUser: User? = null,
     val error: String? = null
 )
 
@@ -27,8 +28,8 @@ class RegisterViewModel(private val authRepository: AuthRepository) : ViewModel(
             _uiState.value = RegisterUiState(isLoading = true)
             val result = authRepository.register(email, name, password)
             result.fold(
-                onSuccess = {
-                    _uiState.value = RegisterUiState(registerSuccess = true)
+                onSuccess = { user ->
+                    _uiState.value = RegisterUiState(registerSuccessUser = user)
                 },
                 onFailure = {
                     _uiState.value = RegisterUiState(error = it.message)

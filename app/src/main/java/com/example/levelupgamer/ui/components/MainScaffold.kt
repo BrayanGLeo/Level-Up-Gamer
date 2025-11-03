@@ -10,6 +10,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.navigation.NavController
+import com.example.levelupgamer.data.model.User
 import com.example.levelupgamer.navigation.Screen
 import kotlinx.coroutines.launch
 
@@ -19,6 +20,7 @@ fun MainScaffold(
     navController: NavController,
     currentRoute: String,
     snackbarHostState: SnackbarHostState,
+    currentUser: User?,
     content: @Composable (Modifier) -> Unit
 ) {
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
@@ -37,6 +39,7 @@ fun MainScaffold(
             drawerContent = {
                 AppDrawer(
                     currentRoute = currentRoute,
+                    currentUser = currentUser,
                     onNavigate = { route ->
                         navController.navigate(route) {
                             popUpTo(Screen.Home.route)

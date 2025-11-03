@@ -2,7 +2,12 @@
     <string name="app_name">Level Up Gamer</string>
     <string name="screen_home">Inicio</string>
     <string name="screen_products">Catálogo</string>
-    <string name="screen_blog">Blog</string>
     <string name="screen_cart">Carrito</string>
+    <string name="screen_blog">Blog</string>
     <string name="screen_login">Iniciar Sesión</string>
+    <string name="screen_profile">Mi Perfil</string>
+    <string name="screen_orders">Mis Pedidos</string>
+    <string name="screen_addresses">Mis Direcciones</string>
+    <string name="screen_settings">Configuración de la Cuenta</string>
+    <string name="logout">Cerrar Sesión</string>
 </resources>

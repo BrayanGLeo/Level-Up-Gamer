@@ -1,11 +1,20 @@
 package com.example.levelupgamer.navigation
 
 import android.widget.Toast
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -13,6 +22,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.example.levelupgamer.data.AuthManager
 import com.example.levelupgamer.data.local.AppDatabase
 import com.example.levelupgamer.data.remote.RetrofitClient
 import com.example.levelupgamer.data.repository.AuthRepository
@@ -30,8 +40,10 @@ import com.example.levelupgamer.ui.screens.login.LoginScreen
 import com.example.levelupgamer.ui.screens.login.LoginViewModel
 import com.example.levelupgamer.ui.screens.products.ProductListScreen
 import com.example.levelupgamer.ui.screens.products.ProductListViewModel
+import com.example.levelupgamer.ui.screens.profile.ProfileScreen
 import com.example.levelupgamer.ui.screens.register.RegisterScreen
 import com.example.levelupgamer.ui.screens.register.RegisterViewModel
+import com.google.gson.Gson
 import kotlinx.coroutines.launch
 
 @Composable
@@ -41,10 +53,13 @@ fun AppNavigation() {
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
 
+    val gson = remember { Gson() }
+    val authManager = remember { AuthManager(context, gson) }
+    var currentUser by remember { mutableStateOf(authManager.loadUser()) }
+
     val db = remember { AppDatabase.getDatabase(context) }
     val cartDao = remember { db.cartDao() }
     val apiService = remember { RetrofitClient.instance }
-
     val authRepository = remember { AuthRepository() }
     val productRepository = remember { ProductRepository(apiService) }
     val cartRepository = remember { CartRepository(cartDao) }
@@ -56,7 +71,8 @@ fun AppNavigation() {
     MainScaffold(
         navController = navController,
         currentRoute = currentRoute,
-        snackbarHostState = snackbarHostState
+        snackbarHostState = snackbarHostState,
+        currentUser = currentUser
     ) { modifier ->
         NavHost(
             navController = navController,
@@ -65,13 +81,22 @@ fun AppNavigation() {
         ) {
             composable(Screen.Login.route) {
                 val vm: LoginViewModel = viewModel { LoginViewModel(authRepository) }
-                LoginScreen(
-                    viewModel = vm,
-                    onLoginSuccess = {
+                val uiState by vm.uiState.collectAsState()
+
+                LaunchedEffect(uiState.loginSuccessUser) {
+                    if (uiState.loginSuccessUser != null) {
+                        authManager.saveUser(uiState.loginSuccessUser)
+                        currentUser = uiState.loginSuccessUser
+
                         navController.navigate(Screen.Home.route) {
                             popUpTo(Screen.Login.route) { inclusive = true }
                         }
-                    },
+                    }
+                }
+
+                LoginScreen(
+                    viewModel = vm,
+                    onLoginSuccess = { },
                     onNavigateToRegister = {
                         navController.navigate(Screen.Register.route)
                     }
@@ -80,75 +105,84 @@ fun AppNavigation() {
 
             composable(Screen.Register.route) {
                 val vm: RegisterViewModel = viewModel { RegisterViewModel(authRepository) }
-                RegisterScreen(
-                    viewModel = vm,
-                    onRegisterSuccess = {
+                val uiState by vm.uiState.collectAsState()
+
+                LaunchedEffect(uiState.registerSuccessUser) {
+                    if (uiState.registerSuccessUser != null) {
                         scope.launch {
                             Toast.makeText(context, "¡Registro exitoso! Inicia sesión.", Toast.LENGTH_LONG).show()
                             navController.navigate(Screen.Login.route) {
                                 popUpTo(Screen.Register.route) { inclusive = true }
                             }
                         }
-                    },
+                    }
+                }
+
+                RegisterScreen(
+                    viewModel = vm,
+                    onRegisterSuccess = { },
                     onNavigateToLogin = {
                         navController.popBackStack()
                     }
                 )
             }
 
+            composable(Screen.Profile.route) {
+                if (currentUser != null) {
+                    ProfileScreen(
+                        user = currentUser,
+                        onNavigate = { route ->
+                            navController.navigate(route)
+                        },
+                        onLogout = {
+                            authManager.clearUser()
+                            currentUser = null
+                            navController.navigate(Screen.Home.route) {
+                                popUpTo(Screen.Home.route) { inclusive = true }
+                            }
+                        }
+                    )
+                } else {
+                    // Si el usuario no está, lo echa al Login
+                    LaunchedEffect(Unit) {
+                        navController.navigate(Screen.Login.route) {
+                            popUpTo(Screen.Home.route) { inclusive = true }
+                        }
+                    }
+                }
+            }
+
             composable(Screen.Home.route) {
-                val vm: HomeViewModel = viewModel {
-                    HomeViewModel(productRepository, blogRepository)
-                }
-                val cartVm: CartViewModel = viewModel {
-                    CartViewModel(cartRepository, apiService)
-                }
+                val vm: HomeViewModel = viewModel { HomeViewModel(productRepository, blogRepository) }
+                val cartVm: CartViewModel = viewModel { CartViewModel(cartRepository, apiService) }
                 HomeScreen(
                     viewModel = vm,
-                    onProductClick = { product ->
-                        navController.navigate(Screen.ProductList.route)
-                    },
+                    onProductClick = { navController.navigate(Screen.ProductList.route) },
                     onAddToCart = { product ->
                         cartVm.addToCart(product)
-                        scope.launch {
-                            snackbarHostState.showSnackbar("Producto añadido al carro")
-                        }
+                        scope.launch { snackbarHostState.showSnackbar("Producto añadido al carro") }
                     },
-                    onNavigateToBlog = {
-                        navController.navigate(Screen.Blog.route)
-                    }
+                    onNavigateToBlog = { navController.navigate(Screen.Blog.route) }
                 )
             }
 
             composable(Screen.Blog.route) {
-                val vm: BlogListViewModel = viewModel {
-                    BlogListViewModel(blogRepository)
-                }
-                BlogListScreen(
-                    viewModel = vm,
-                    onBlogClick = { blogId ->
-                    }
-                )
+                val vm: BlogListViewModel = viewModel { BlogListViewModel(blogRepository) }
+                BlogListScreen(viewModel = vm, onBlogClick = { /* Futuro detalle blog */ })
             }
 
             composable(Screen.ProductList.route) {
-                val vm: ProductListViewModel = viewModel {
-                    ProductListViewModel(productRepository, cartRepository)
-                }
+                val vm: ProductListViewModel = viewModel { ProductListViewModel(productRepository, cartRepository) }
                 ProductListScreen(
                     viewModel = vm,
                     onProductAdded = {
-                        scope.launch {
-                            snackbarHostState.showSnackbar("Producto añadido al carro")
-                        }
+                        scope.launch { snackbarHostState.showSnackbar("Producto añadido al carro") }
                     }
                 )
             }
 
             composable(Screen.Cart.route) {
-                val vm: CartViewModel = viewModel {
-                    CartViewModel(cartRepository, apiService)
-                }
+                val vm: CartViewModel = viewModel { CartViewModel(cartRepository, apiService) }
                 CartScreen(
                     viewModel = vm,
                     onCheckoutSuccess = {
@@ -157,6 +191,22 @@ fun AppNavigation() {
                         }
                     }
                 )
+            }
+
+            composable(Screen.Orders.route) {
+                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Text("Pantalla de Pedidos (en construcción)")
+                }
+            }
+            composable(Screen.Addresses.route) {
+                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Text("Pantalla de Direcciones (en construcción)")
+                }
+            }
+            composable(Screen.Settings.route) {
+                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Text("Pantalla de Configuración (en construcción)")
+                }
             }
         }
     }
