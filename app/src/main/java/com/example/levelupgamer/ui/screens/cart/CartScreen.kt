@@ -1,6 +1,7 @@
 package com.example.levelupgamer.ui.screens.cart
 
 import android.widget.Toast
+import androidx.compose.material3.SwipeToDismissBox
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
@@ -23,7 +24,7 @@ import com.example.levelupgamer.ui.screens.cart.components.CartItemCard
 import com.example.levelupgamer.ui.screens.products.components.toPrice
 import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3Api::class)
 @Composable
 fun CartScreen(
     viewModel: CartViewModel,
@@ -36,7 +37,6 @@ fun CartScreen(
     val coroutineScope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
 
-    // Manejar estado de la UI (errores, éxito)
     LaunchedEffect(uiState) {
         if (uiState.error != null) {
             snackbarHostState.showSnackbar("Error: ${uiState.error}")
@@ -93,7 +93,7 @@ fun CartScreen(
                             }
                         )
 
-                        SwipeToDismissBox( // <-- API correcta
+                        SwipeToDismissBox(
                             state = dismissState,
                             enableDismissFromStartToEnd = true,
                             enableDismissFromEndToStart = true,
