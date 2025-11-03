@@ -161,7 +161,8 @@ fun AppNavigation() {
                         cartVm.addToCart(product)
                         scope.launch { snackbarHostState.showSnackbar("Producto añadido al carro") }
                     },
-                    onNavigateToBlog = { navController.navigate(Screen.Blog.route) }
+                    onNavigateToBlog = { navController.navigate(Screen.Blog.route) },
+                    currentUser = currentUser
                 )
             }
 

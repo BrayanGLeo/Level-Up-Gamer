@@ -17,10 +17,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.levelupgamer.R
 import com.example.levelupgamer.data.model.Product
+import com.example.levelupgamer.data.model.User
 import com.example.levelupgamer.ui.screens.home.components.BlogSummaryCard
 import com.example.levelupgamer.ui.screens.products.components.ProductCard
 
@@ -29,7 +31,8 @@ fun HomeScreen(
     viewModel: HomeViewModel,
     onProductClick: (Product) -> Unit,
     onAddToCart: (Product) -> Unit,
-    onNavigateToBlog: () -> Unit
+    onNavigateToBlog: () -> Unit,
+    currentUser: User?
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
@@ -38,6 +41,23 @@ fun HomeScreen(
         contentPadding = PaddingValues(bottom = 16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
+        item {
+            Text(
+                text = if (currentUser != null)
+                    "👋 ¡Bienvenido, ${currentUser.nombre}!"
+                else
+                    "👋 ¡Bienvenido a LevelUp Gamer!",
+                fontSize = 22.sp,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 16.dp),
+                textAlign = TextAlign.Center
+            )
+        }
+
+        // Logo
         item {
             Image(
                 painter = painterResource(id = R.drawable.logo_levelup),
@@ -93,6 +113,7 @@ fun HomeScreen(
             }
         }
 
+        // Últimas noticias
         item {
             Row(
                 modifier = Modifier
