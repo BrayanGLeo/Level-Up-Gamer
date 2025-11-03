@@ -1,7 +1,6 @@
 package com.example.levelupgamer.ui.screens.cart
 
 import android.widget.Toast
-import androidx.compose.material3.SwipeToDismissBox
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
@@ -24,7 +23,7 @@ import com.example.levelupgamer.ui.screens.cart.components.CartItemCard
 import com.example.levelupgamer.ui.screens.products.components.toPrice
 import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CartScreen(
     viewModel: CartViewModel,
@@ -82,7 +81,7 @@ fun CartScreen(
 
                         val dismissState = rememberDismissState(
                             confirmValueChange = { dismissValue ->
-                                if (dismissValue == DismissValue.DismissedToEnd || dismissValue == DismissValue.DismissedToStart) {
+                                if (dismissValue == DismissValue.DismissedToEnd || dismissValue == DismissValue.DismissedToStart) { // <-- Ahora será resuelto
                                     viewModel.removeFromCart(item.codigo)
                                     coroutineScope.launch {
                                         snackbarHostState.showSnackbar("Producto eliminado")
@@ -131,7 +130,7 @@ fun CartScreen(
                                 }
                             )
                         }
-
+                        
                         HorizontalDivider()
                     }
                 }
