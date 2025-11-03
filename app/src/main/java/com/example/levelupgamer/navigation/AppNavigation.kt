@@ -130,7 +130,7 @@ fun AppNavigation() {
             composable(Screen.Profile.route) {
                 if (currentUser != null) {
                     ProfileScreen(
-                        user = currentUser,
+                        user = currentUser!!,
                         onNavigate = { route ->
                             navController.navigate(route)
                         },
@@ -143,7 +143,6 @@ fun AppNavigation() {
                         }
                     )
                 } else {
-                    // Si el usuario no está, lo echa al Login
                     LaunchedEffect(Unit) {
                         navController.navigate(Screen.Login.route) {
                             popUpTo(Screen.Home.route) { inclusive = true }
@@ -168,7 +167,7 @@ fun AppNavigation() {
 
             composable(Screen.Blog.route) {
                 val vm: BlogListViewModel = viewModel { BlogListViewModel(blogRepository) }
-                BlogListScreen(viewModel = vm, onBlogClick = { /* Futuro detalle blog */ })
+                BlogListScreen(viewModel = vm, onBlogClick = { /* ... */ })
             }
 
             composable(Screen.ProductList.route) {
