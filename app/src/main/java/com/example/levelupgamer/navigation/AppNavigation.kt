@@ -181,15 +181,23 @@ fun AppNavigation() {
             }
 
             composable(Screen.Cart.route) {
-                val vm: CartViewModel = viewModel { CartViewModel(cartRepository, apiService) }
-                CartScreen(
-                    viewModel = vm,
-                    onCheckoutSuccess = {
-                        navController.navigate(Screen.Home.route) {
+                if (currentUser != null) {
+                    val vm: CartViewModel = viewModel { CartViewModel(cartRepository, apiService) }
+                    CartScreen(
+                        viewModel = vm,
+                        onCheckoutSuccess = {
+                            navController.navigate(Screen.Home.route) {
+                                popUpTo(Screen.Home.route) { inclusive = true }
+                            }
+                        }
+                    )
+                } else {
+                    LaunchedEffect(Unit) {
+                        navController.navigate(Screen.Login.route) {
                             popUpTo(Screen.Home.route) { inclusive = true }
                         }
                     }
-                )
+                }
             }
 
             composable(Screen.Orders.route) {
