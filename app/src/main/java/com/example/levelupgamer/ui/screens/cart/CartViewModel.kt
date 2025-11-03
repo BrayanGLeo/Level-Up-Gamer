@@ -13,7 +13,6 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.SharingStarted
-// ------------------------------------------
 
 data class CartUiState(
     val isLoading: Boolean = false,
@@ -32,7 +31,7 @@ class CartViewModel(
     val cartItems: StateFlow<List<CartItem>> = cartRepository.cartItems
         .stateIn(
             scope = viewModelScope,
-            started = SharingStarted.WhileSubsided(5000),
+            started = SharingStarted.WhileSubscribed(5000),
             initialValue = emptyList()
         )
 
@@ -40,7 +39,7 @@ class CartViewModel(
         .map { items -> items.sumOf { it.precio * it.quantity } }
         .stateIn(
             scope = viewModelScope,
-            started = SharingStarted.WhileSubsided(5000),
+            started = SharingStarted.WhileSubscribed(5000),
             initialValue = 0
         )
 
@@ -69,9 +68,14 @@ class CartViewModel(
 
                 val order = Order(items = items, total = total, customerEmail = userEmail)
 
-                kotlinx.coroutines.delay(1500)
-                cartRepository.clearCart()
-                _uiState.value = CartUiState(saleSuccess = true)
+                val response = apiService.postSale(order)
+
+                if (response.success) {
+                    cartRepository.clearCart()
+                    _uiState.value = CartUiState(saleSuccess = true)
+                } else {
+                    _uiState.value = CartUiState(error = "Error al procesar la venta.")
+                }
 
             } catch (e: Exception) {
                 _uiState.value = CartUiState(error = "Error de conexión: ${e.message}")

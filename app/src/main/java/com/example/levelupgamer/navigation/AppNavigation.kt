@@ -28,6 +28,9 @@ import com.example.levelupgamer.ui.screens.login.LoginScreen
 import com.example.levelupgamer.ui.screens.login.LoginViewModel
 import com.example.levelupgamer.ui.screens.products.ProductListScreen
 import com.example.levelupgamer.ui.screens.products.ProductListViewModel
+import com.example.levelupgamer.ui.screens.home.HomeScreen
+import com.example.levelupgamer.ui.screens.home.HomeViewModel
+import org.koin.androidx.compose.koinViewModel
 import kotlinx.coroutines.launch
 
 @Composable
@@ -55,7 +58,7 @@ fun AppNavigation() {
     ) { modifier ->
         NavHost(
             navController = navController,
-            startDestination = Screen.Login.route,
+            startDestination = Screen.Home.route,
             modifier = modifier
         ) {
             composable(Screen.Login.route) {
@@ -66,6 +69,15 @@ fun AppNavigation() {
                         navController.navigate(Screen.ProductList.route) {
                             popUpTo(Screen.Login.route) { inclusive = true }
                         }
+                    }
+                )
+            }
+
+            composable(Screen.Home.route) {
+                val viewModel: HomeViewModel = koinViewModel()
+                HomeScreen(
+                    viewModel = viewModel,
+                    onProductClick = {
                     }
                 )
             }
@@ -112,7 +124,6 @@ fun AppNavigation() {
                 )
             }
 
-            // TODO: Crear las pantallas de Perfil y Mis Pedidos
             composable(Screen.Profile.route) {
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Text("Pantalla de Perfil (en construcción)")

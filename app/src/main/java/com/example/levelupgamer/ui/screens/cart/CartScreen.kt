@@ -10,6 +10,9 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.*
+import androidx.compose.material3.SwipeToDismissBox
+import androidx.compose.material3.SwipeToDismissBoxValue
+import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -79,17 +82,20 @@ fun CartScreen(
                 ) {
                     items(cartItems, key = { it.codigo }) { item ->
 
-                        val dismissState = rememberDismissState(
-                            confirmValueChange = { dismissValue ->
-                                if (dismissValue == DismissValue.DismissedToEnd || dismissValue == DismissValue.DismissedToStart) { // <-- Ahora será resuelto
+                        val dismissState = rememberSwipeToDismissBoxState(
+                            confirmValueChange = { targetValue ->
+                                if (targetValue == SwipeToDismissBoxValue.StartToEnd ||
+                                    targetValue == SwipeToDismissBoxValue.EndToStart) {
+
                                     viewModel.removeFromCart(item.codigo)
                                     coroutineScope.launch {
                                         snackbarHostState.showSnackbar("Producto eliminado")
                                     }
-                                    return@rememberDismissState true
+                                    return@rememberSwipeToDismissBoxState true
                                 }
                                 false
-                            }
+                            },
+                            positionalThreshold = { it * .25f }
                         )
 
                         SwipeToDismissBox(
@@ -99,13 +105,13 @@ fun CartScreen(
                             backgroundContent = {
                                 val color by animateColorAsState(
                                     targetValue = when (dismissState.targetValue) {
-                                        DismissValue.DismissedToEnd -> MaterialTheme.colorScheme.errorContainer
-                                        DismissValue.DismissedToStart -> MaterialTheme.colorScheme.errorContainer
-                                        else -> Color.Transparent
+                                        SwipeToDismissBoxValue.StartToEnd -> MaterialTheme.colorScheme.errorContainer
+                                        SwipeToDismissBoxValue.EndToStart -> MaterialTheme.colorScheme.errorContainer
+                                        SwipeToDismissBoxValue.Settled -> Color.Transparent
                                     }, label = "background color"
                                 )
                                 val scale by animateFloatAsState(
-                                    if (dismissState.targetValue == DismissValue.Default) 0.75f else 1f, label = "scale"
+                                    if (dismissState.targetValue == SwipeToDismissBoxValue.Settled) 0.75f else 1f, label = "scale"
                                 )
 
                                 Box(
@@ -130,7 +136,6 @@ fun CartScreen(
                                 }
                             )
                         }
-                        
                         HorizontalDivider()
                     }
                 }
