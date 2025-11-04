@@ -10,10 +10,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.levelupgamer.R
@@ -26,8 +28,8 @@ fun RegisterScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
-    LaunchedEffect(uiState.registerSuccess) {
-        if (uiState.registerSuccess) {
+    LaunchedEffect(uiState.registerSuccessUser) {
+        if (uiState.registerSuccessUser != null) {
             onRegisterSuccess()
         }
     }
@@ -114,13 +116,32 @@ fun RegisterScreen(
             }
 
             Spacer(modifier = Modifier.height(16.dp))
+
+            val annotatedText = buildAnnotatedString {
+                append("¿Ya tienes cuenta? ")
+                pushStringAnnotation(tag = "LOGIN", annotation = "login")
+                withStyle(
+                    style = SpanStyle(
+                        color = MaterialTheme.colorScheme.primary,
+                        textDecoration = TextDecoration.Underline
+                    )
+                ) {
+                    append("Inicia Sesión")
+                }
+                pop()
+            }
+
             ClickableText(
-                text = AnnotatedString("¿Ya tienes cuenta? Inicia Sesión"),
+                text = annotatedText,
                 style = TextStyle(
-                    color = MaterialTheme.colorScheme.primary,
-                    textDecoration = TextDecoration.Underline
+                    color = MaterialTheme.colorScheme.onSurface
                 ),
-                onClick = { onNavigateToLogin() }
+                onClick = { offset ->
+                    annotatedText.getStringAnnotations(tag = "LOGIN", start = offset, end = offset)
+                        .firstOrNull()?.let {
+                            onNavigateToLogin()
+                        }
+                }
             )
 
             uiState.error?.let {

@@ -44,7 +44,7 @@ fun HomeScreen(
         item {
             Text(
                 text = if (currentUser != null)
-                    "👋 ¡Bienvenido, ${currentUser.nombre}!"
+                    "👋 ¡Bienvenido, ${currentUser.name}!"
                 else
                     "👋 ¡Bienvenido a LevelUp Gamer!",
                 fontSize = 22.sp,

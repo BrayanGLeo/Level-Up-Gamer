@@ -10,7 +10,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -29,8 +28,8 @@ fun LoginScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
-    LaunchedEffect(uiState.loginSuccess) {
-        if (uiState.loginSuccess) {
+    LaunchedEffect(uiState.loginSuccessUser) {
+        if (uiState.loginSuccessUser != null) {
             onLoginSuccess()
         }
     }
