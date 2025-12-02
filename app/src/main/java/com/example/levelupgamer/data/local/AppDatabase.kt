@@ -5,12 +5,18 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import com.example.levelupgamer.data.model.CartItem
+import com.example.levelupgamer.data.model.Product
 import com.example.levelupgamer.data.model.OrderEntity
 import com.example.levelupgamer.data.model.OrderItemEntity
 
-@Database(entities = [CartItem::class, OrderEntity::class, OrderItemEntity::class], version = 2, exportSchema = false)
+@Database(
+    entities = [Product::class, CartItem::class, OrderEntity::class, OrderItemEntity::class],
+    version = 2,
+    exportSchema = false
+)
 abstract class AppDatabase : RoomDatabase() {
 
+    abstract fun productDao(): ProductDao
     abstract fun cartDao(): CartDao
     abstract fun orderDao(): OrderDao
 
@@ -23,10 +29,10 @@ abstract class AppDatabase : RoomDatabase() {
                 val instance = Room.databaseBuilder(
                     context.applicationContext,
                     AppDatabase::class.java,
-                    "level_up_gamer_db"
+                    "levelup_gamer_database"
                 )
-                .fallbackToDestructiveMigration() // Simplifica cambios de esquema en desarrollo
-                .build()
+                    .fallbackToDestructiveMigration()
+                    .build()
                 INSTANCE = instance
                 instance
             }

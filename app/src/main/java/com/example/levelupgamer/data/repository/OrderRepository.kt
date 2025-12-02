@@ -1,5 +1,6 @@
 package com.example.levelupgamer.data.repository
 
+import android.content.Context
 import android.util.Log
 import com.example.levelupgamer.data.local.OrderDao
 import com.example.levelupgamer.data.model.*
@@ -10,7 +11,8 @@ import kotlinx.coroutines.withContext
 
 class OrderRepository(
     private val orderDao: OrderDao,
-    private val apiService: ApiService
+    private val apiService: ApiService,
+    private val context: Context
 ) {
 
     fun getOrderById(orderId: Long): Flow<OrderWithItems?> {
@@ -18,16 +20,15 @@ class OrderRepository(
     }
 
     suspend fun placeOrder(
-        user: User?, // Puede ser null si es invitado
+        user: User?,
         checkoutState: com.example.levelupgamer.ui.screens.checkout.CheckoutUiState,
         cartItems: List<CartItem>,
         total: Int
     ): Result<Long> {
         return withContext(Dispatchers.IO) {
             try {
-                // 1. Preparar Entities para Room
                 val orderEntity = OrderEntity(
-                    userEmail = user?.email ?: checkoutState.email, // Si es invitado usamos el email del form
+                    userEmail = user?.email ?: checkoutState.email,
                     userName = checkoutState.name,
                     userLastName = checkoutState.lastName,
                     userRut = checkoutState.rut,
@@ -44,9 +45,8 @@ class OrderRepository(
                     isSynced = false
                 )
 
-                // 2. Guardar en Room (Local)
                 val orderId = orderDao.insertOrder(orderEntity)
-                
+
                 val orderItemsEntities = cartItems.map { item ->
                     OrderItemEntity(
                         orderId = orderId,
@@ -58,49 +58,8 @@ class OrderRepository(
                 }
                 orderDao.insertOrderItems(orderItemsEntities)
 
-                // 3. Intentar enviar a la API (Online)
-                try {
-                    val apiRequest = CreateOrderRequest(
-                        customer = CustomerInfo(
-                            name = checkoutState.name,
-                            lastName = checkoutState.lastName,
-                            rut = checkoutState.rut,
-                            email = checkoutState.email,
-                            phone = checkoutState.phone
-                        ),
-                        delivery = DeliveryInfo(
-                            method = checkoutState.deliveryMethod.name,
-                            region = checkoutState.region.takeIf { it.isNotEmpty() },
-                            commune = checkoutState.commune.takeIf { it.isNotEmpty() },
-                            address = "${checkoutState.street} ${checkoutState.houseNumber} ${checkoutState.apartment}"
-                        ),
-                        payment = PaymentInfo(method = checkoutState.paymentMethod.name),
-                        items = cartItems.map { 
-                            OrderItemRequest(it.codigo, it.quantity, it.precio) 
-                        },
-                        total = total
-                    )
-
-                    // Llamada a la API
-                    // Nota: Si la URL es falsa o no hay internet, esto lanzará excepción
-                    // En un escenario real, descomentar la siguiente línea:
-                    // val response = apiService.createOrder(apiRequest)
-                    
-                    // Si es exitoso:
-                    // if (response.success) {
-                    //     orderDao.markOrderAsSynced(orderId)
-                    // }
-                    
-                    // Simulamos éxito de API para el demo si no falla antes
-                     orderDao.markOrderAsSynced(orderId)
-
-                } catch (e: Exception) {
-                    // Falló la API, pero ya guardamos localmente.
-                    // El worker de sincronización se encargará después.
-                    Log.e("OrderRepository", "Error enviando orden a API: ${e.message}")
-                }
-
                 Result.success(orderId)
+
             } catch (e: Exception) {
                 Log.e("OrderRepository", "Error guardando orden: ${e.message}")
                 Result.failure(e)
