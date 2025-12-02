@@ -5,11 +5,14 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import com.example.levelupgamer.data.model.CartItem
+import com.example.levelupgamer.data.model.OrderEntity
+import com.example.levelupgamer.data.model.OrderItemEntity
 
-@Database(entities = [CartItem::class], version = 1, exportSchema = false)
+@Database(entities = [CartItem::class, OrderEntity::class, OrderItemEntity::class], version = 2, exportSchema = false)
 abstract class AppDatabase : RoomDatabase() {
 
     abstract fun cartDao(): CartDao
+    abstract fun orderDao(): OrderDao
 
     companion object {
         @Volatile
@@ -21,7 +24,9 @@ abstract class AppDatabase : RoomDatabase() {
                     context.applicationContext,
                     AppDatabase::class.java,
                     "level_up_gamer_db"
-                ).build()
+                )
+                .fallbackToDestructiveMigration() // Simplifica cambios de esquema en desarrollo
+                .build()
                 INSTANCE = instance
                 instance
             }

@@ -2,11 +2,11 @@ package com.example.levelupgamer.ui.components
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Article
+import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.automirrored.filled.ListAlt
 import androidx.compose.material.icons.filled.AccountCircle
-import androidx.compose.material.icons.filled.Article
 import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.ShoppingCart
@@ -51,7 +51,7 @@ fun AppDrawer(
         ) {
             Text("Level-Up Gamer", style = MaterialTheme.typography.titleLarge)
         }
-        Divider()
+        HorizontalDivider()
         Spacer(Modifier.height(12.dp))
 
         menuItems.forEach { item ->
@@ -76,8 +76,8 @@ fun AppDrawer(
 private fun getScreenMetadata(screen: Screen): Pair<Int, ImageVector> {
     return when (screen) {
         Screen.Home -> Pair(R.string.screen_home, Icons.Default.Home)
-        Screen.ProductList -> Pair(R.string.screen_products, Icons.Default.List)
-        Screen.Blog -> Pair(R.string.screen_blog, Icons.Default.Article)
+        Screen.ProductList -> Pair(R.string.screen_products, Icons.AutoMirrored.Filled.List)
+        Screen.Blog -> Pair(R.string.screen_blog, Icons.AutoMirrored.Filled.Article)
         Screen.Cart -> Pair(R.string.screen_cart, Icons.Default.ShoppingCart)
 
         Screen.Login -> Pair(R.string.screen_login, Icons.Default.AccountCircle)
@@ -87,5 +87,8 @@ private fun getScreenMetadata(screen: Screen): Pair<Int, ImageVector> {
         Screen.Orders -> Pair(R.string.screen_orders, Icons.AutoMirrored.Filled.ListAlt)
         Screen.Addresses -> Pair(R.string.screen_addresses, Icons.Default.LocationOn)
         Screen.Settings -> Pair(R.string.screen_settings, Icons.Default.Settings)
+        
+        Screen.Checkout -> Pair(R.string.screen_cart, Icons.Default.ShoppingCart)
+        Screen.OrderSuccess -> Pair(R.string.screen_cart, Icons.Default.ShoppingCart)
     }
 }

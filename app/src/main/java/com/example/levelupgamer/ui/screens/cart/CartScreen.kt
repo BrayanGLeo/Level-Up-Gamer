@@ -19,6 +19,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.levelupgamer.data.model.User
 import com.example.levelupgamer.ui.screens.cart.components.CartItemCard
 import com.example.levelupgamer.ui.screens.products.components.toPrice
 import kotlinx.coroutines.launch
@@ -30,7 +31,10 @@ import androidx.compose.material3.rememberSwipeToDismissBoxState
 @Composable
 fun CartScreen(
     viewModel: CartViewModel,
-    onCheckoutSuccess: () -> Unit
+    currentUser: User?,
+    onNavigateToCheckout: () -> Unit,
+    onNavigateToLogin: () -> Unit,
+    onNavigateToRegister: () -> Unit
 ) {
     val cartItems by viewModel.cartItems.collectAsState()
     val total by viewModel.cartTotal.collectAsState()
@@ -39,14 +43,56 @@ fun CartScreen(
     val coroutineScope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
 
+    var showAuthDialog by remember { mutableStateOf(false) }
+
     LaunchedEffect(uiState) {
         if (uiState.error != null) {
             snackbarHostState.showSnackbar("Error: ${uiState.error}")
         }
-        if (uiState.saleSuccess) {
-            Toast.makeText(context, "¡Venta registrada con éxito!", Toast.LENGTH_LONG).show()
-            onCheckoutSuccess()
-        }
+    }
+
+    if (showAuthDialog) {
+        AlertDialog(
+            onDismissRequest = { showAuthDialog = false },
+            title = { Text("Identifícate") },
+            text = {
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Text("Para continuar con tu compra, selecciona una opción:")
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Button(
+                        onClick = {
+                            showAuthDialog = false
+                            onNavigateToLogin()
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text("Iniciar Sesión")
+                    }
+                    OutlinedButton(
+                        onClick = {
+                            showAuthDialog = false
+                            onNavigateToRegister()
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text("Registrarse")
+                    }
+                    TextButton(
+                        onClick = {
+                            showAuthDialog = false
+                            onNavigateToCheckout()
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text("Continuar como Invitado")
+                    }
+                }
+            },
+            confirmButton = {}
+        )
     }
 
     Scaffold(
@@ -57,7 +103,11 @@ fun CartScreen(
                     total = total,
                     isLoading = uiState.isLoading,
                     onCheckout = {
-                        viewModel.checkout("cliente@duoc.cl")
+                        if (currentUser != null) {
+                            onNavigateToCheckout()
+                        } else {
+                            showAuthDialog = true
+                        }
                     }
                 )
             }
@@ -181,7 +231,7 @@ fun CartBottomBar(total: Int, isLoading: Boolean, onCheckout: () -> Unit) {
                         color = MaterialTheme.colorScheme.onPrimary
                     )
                 } else {
-                    Text("Enviar Venta (Checkout)", fontSize = 16.sp)
+                    Text("Ir a Pagar", fontSize = 16.sp)
                 }
             }
         }

@@ -18,22 +18,29 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.example.levelupgamer.data.AuthManager
 import com.example.levelupgamer.data.local.AppDatabase
 import com.example.levelupgamer.data.remote.RetrofitClient
 import com.example.levelupgamer.data.repository.AuthRepository
 import com.example.levelupgamer.data.repository.BlogRepository
 import com.example.levelupgamer.data.repository.CartRepository
+import com.example.levelupgamer.data.repository.OrderRepository
 import com.example.levelupgamer.data.repository.ProductRepository
 import com.example.levelupgamer.ui.components.MainScaffold
 import com.example.levelupgamer.ui.screens.blog.BlogListScreen
 import com.example.levelupgamer.ui.screens.blog.BlogListViewModel
 import com.example.levelupgamer.ui.screens.cart.CartScreen
 import com.example.levelupgamer.ui.screens.cart.CartViewModel
+import com.example.levelupgamer.ui.screens.checkout.CheckoutScreen
+import com.example.levelupgamer.ui.screens.checkout.CheckoutViewModel
+import com.example.levelupgamer.ui.screens.checkout.OrderSuccessScreen
+import com.example.levelupgamer.ui.screens.checkout.OrderSuccessViewModel
 import com.example.levelupgamer.ui.screens.home.HomeScreen
 import com.example.levelupgamer.ui.screens.home.HomeViewModel
 import com.example.levelupgamer.ui.screens.login.LoginScreen
@@ -59,10 +66,12 @@ fun AppNavigation() {
 
     val db = remember { AppDatabase.getDatabase(context) }
     val cartDao = remember { db.cartDao() }
+    val orderDao = remember { db.orderDao() }
     val apiService = remember { RetrofitClient.instance }
     val authRepository = remember { AuthRepository() }
     val productRepository = remember { ProductRepository(apiService) }
     val cartRepository = remember { CartRepository(cartDao) }
+    val orderRepository = remember { OrderRepository(orderDao, apiService) }
     val blogRepository = remember { BlogRepository() }
 
     val navBackStackEntry by navController.currentBackStackEntryAsState()
@@ -182,23 +191,58 @@ fun AppNavigation() {
             }
 
             composable(Screen.Cart.route) {
-                if (currentUser != null) {
-                    val vm: CartViewModel = viewModel { CartViewModel(cartRepository, apiService) }
-                    CartScreen(
-                        viewModel = vm,
-                        onCheckoutSuccess = {
-                            navController.navigate(Screen.Home.route) {
-                                popUpTo(Screen.Home.route) { inclusive = true }
-                            }
-                        }
-                    )
-                } else {
-                    LaunchedEffect(Unit) {
-                        navController.navigate(Screen.Login.route) {
+                val vm: CartViewModel = viewModel { CartViewModel(cartRepository, apiService) }
+                CartScreen(
+                    viewModel = vm,
+                    currentUser = currentUser,
+                    onNavigateToCheckout = {
+                        navController.navigate(Screen.Checkout.route)
+                    },
+                    onNavigateToLogin = {
+                        navController.navigate(Screen.Login.route)
+                    },
+                    onNavigateToRegister = {
+                        navController.navigate(Screen.Register.route)
+                    }
+                )
+            }
+
+            composable(Screen.Checkout.route) {
+                 CheckoutScreen(
+                     currentUser = currentUser,
+                     cartRepository = cartRepository,
+                     orderRepository = orderRepository,
+                     onNavigateBack = { navController.popBackStack() },
+                     onOrderPlacedSuccessfully = { orderId ->
+                         navController.navigate(Screen.OrderSuccess.createRoute(orderId)) {
+                             popUpTo(Screen.Cart.route) { inclusive = true }
+                         }
+                     }
+                 )
+            }
+            
+            composable(
+                route = Screen.OrderSuccess.route,
+                arguments = listOf(navArgument("orderId") { type = NavType.LongType })
+            ) { backStackEntry ->
+                val orderId = backStackEntry.arguments?.getLong("orderId") ?: 0L
+                val vm: OrderSuccessViewModel = viewModel { 
+                    OrderSuccessViewModel(orderId, orderRepository, context) 
+                }
+                val uiState by vm.uiState.collectAsState()
+
+                OrderSuccessScreen(
+                    uiState = uiState,
+                    currentUser = currentUser,
+                    onContinueShopping = {
+                        navController.navigate(Screen.Home.route) {
                             popUpTo(Screen.Home.route) { inclusive = true }
                         }
+                    },
+                    onViewOrders = {
+                        navController.navigate(Screen.Orders.route)
                     }
-                }
+                )
             }
 
             composable(Screen.Orders.route) {

@@ -4,10 +4,15 @@ import com.example.levelupgamer.data.local.CartDao
 import com.example.levelupgamer.data.model.CartItem
 import com.example.levelupgamer.data.model.Product
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 
 class CartRepository(private val cartDao: CartDao) {
 
     val cartItems: Flow<List<CartItem>> = cartDao.getAllCartItems()
+    
+    val cartTotal: Flow<Int> = cartItems.map { items ->
+        items.sumOf { it.precio * it.quantity }
+    }
 
     suspend fun addToCart(product: Product) {
         val existingItem = cartDao.getItem(product.codigo)
